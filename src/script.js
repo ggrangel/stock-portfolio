@@ -27,6 +27,17 @@ class Portfolio extends React.Component {
     // Note: api JSON data often come in underscore_styled like above
   }
   render() {
+    const { portfolio } = this.state;
+    const portfolio_market_value = portfolio.reduce(
+      (sum, stock) => stock.shares_owned * stock.market_price + sum,
+      0
+    );
+    const portfolio_cost = portfolio.reduce(
+      (sum, stock) => stock.shares_owned * stock.cost_per_share + sum,
+      0
+    );
+    const portfolio_gain_loss = portfolio_market_value - portfolio_cost;
+
     return (
       <div className="container">
         <h1 className="text-center my-4">Stock Portfolio</h1>
@@ -48,6 +59,9 @@ class Portfolio extends React.Component {
                 {portfolio.map((stock, index) => {
                   const { name, shares_owned, cost_per_share, market_price } =
                     stock;
+                  const market_value = shares_owned * market_price;
+                  const unrealized_gain_loss =
+                    market_value - shares_owned * cost_per_share;
                   return (
                     <tr key={index}>
                       <td>{name}</td>
@@ -72,8 +86,8 @@ class Portfolio extends React.Component {
                           value={market_price}
                         />
                       </td>
-                      <td></td>
-                      <td></td>
+                      <td>{market_value}</td>
+                      <td>{unrealized_gain_loss}</td>
                       <td>
                         <button className="btn btn-light btn-sm">remove</button>
                       </td>
@@ -82,6 +96,16 @@ class Portfolio extends React.Component {
                 })}
               </tbody>
             </table>
+            <div className="col-12 col-md-6">
+              <h4 className="mb-3">
+                Portfolio value: $ {portfolio_market_value}
+              </h4>
+            </div>
+            <div className="col-12 col-md-6">
+              <h4 className="mb-3">
+                Portfolio gain/loss: $ {portfolio_gain_loss}
+              </h4>
+            </div>
           </div>
         </div>
       </div>
