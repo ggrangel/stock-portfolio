@@ -1,33 +1,91 @@
+let PORTFOLIO = [
+  {
+    name: "Feetbook",
+    shares_owned: 20,
+    cost_per_share: 50,
+    market_price: 130,
+  },
+  {
+    name: "Yamazon",
+    shares_owned: 5,
+    cost_per_share: 200,
+    market_price: 500,
+  },
+  {
+    name: "Snoozechat",
+    shares_owned: 100,
+    cost_per_share: 20,
+    market_price: 3,
+  },
+];
+
 class Portfolio extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      portfolio: [
-        {
-          name: "Feetbook",
-          shares_owned: 20,
-          cost_per_share: 50,
-          market_price: 130,
-        },
-        {
-          name: "Yamazon",
-          shares_owned: 5,
-          cost_per_share: 200,
-          market_price: 500,
-        },
-        {
-          name: "Snoozechat",
-          shares_owned: 100,
-          cost_per_share: 20,
-          market_price: 3,
-        },
-      ],
+      portfolio: PORTFOLIO,
+      form: {
+        name: "",
+        shares_owned: 0,
+        cost_per_share: 0,
+        market_price: 0,
+      },
     };
-
+    this.handleFormChange = this.handleFormChange.bind(this);
+    this.addStock = this.addStock.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.removeStock = this.removeStock.bind(this);
+  }
 
-    // Note: api JSON data often come in underscore_styled like above
+  // Note: api JSON data often come in underscore_styled like above
+
+  updateTable() {
+    const { portfolio } = this.state;
+
+    return portfolio.map((stock, index) => {
+      const { name, shares_owned, cost_per_share, market_price } = stock;
+      const market_value = shares_owned * market_price;
+      const unrealized_gain_loss = market_value - shares_owned * cost_per_share;
+      return (
+        <tr key={index}>
+          <td>{name}</td>
+          <td>
+            <input
+              onChange={(e) => this.handleChange(e, index)}
+              type="number"
+              name="shares_owned"
+              value={shares_owned}
+            />
+          </td>
+          <td>
+            <input
+              onChange={(e) => this.handleChange(e, index)}
+              type="number"
+              name="cost_per_share"
+              value={cost_per_share}
+            />
+          </td>
+          <td>
+            <input
+              onChange={(e) => this.handleChange(e, index)}
+              type="number"
+              name="market_price"
+              value={market_price}
+            />
+          </td>
+          <td>{market_value}</td>
+          <td>{unrealized_gain_loss}</td>
+          <td>
+            <button
+              className="btn btn-light btn-sm"
+              onClick={() => this.removeStock(index)}
+            >
+              remove
+            </button>
+          </td>
+        </tr>
+      );
+    });
   }
 
   handleChange(event, index) {
@@ -37,6 +95,27 @@ class Portfolio extends React.Component {
     this.setState({ portfolio });
   }
 
+  handleFormChange(event) {
+    const { name, value } = event.target;
+    const { form } = this.state;
+    form[name] = value;
+    this.setState({ form });
+  }
+
+  addStock(event) {
+    event.preventDefault();
+    const portfolio = this.state.portfolio.slice();
+    portfolio.push(this.state.form);
+    this.setState({
+      portfolio,
+      form: {
+        name: "",
+        shares_owned: 0,
+        cost_per_share: 0,
+        market_price: 0,
+      },
+    });
+  }
   removeStock(index) {
     const portfolio = this.state.portfolio.slice(); // shallow copy
     portfolio.splice(index, 1); // remove value at index
@@ -44,7 +123,7 @@ class Portfolio extends React.Component {
   }
 
   render() {
-    const { portfolio } = this.state;
+    const { portfolio, form } = this.state;
     const portfolio_market_value = portfolio.reduce(
       (sum, stock) => stock.shares_owned * stock.market_price + sum,
       0
@@ -72,54 +151,7 @@ class Portfolio extends React.Component {
                   <th scope="col"></th>
                 </tr>
               </thead>
-              <tbody>
-                {portfolio.map((stock, index) => {
-                  const { name, shares_owned, cost_per_share, market_price } =
-                    stock;
-                  const market_value = shares_owned * market_price;
-                  const unrealized_gain_loss =
-                    market_value - shares_owned * cost_per_share;
-                  return (
-                    <tr key={index}>
-                      <td>{name}</td>
-                      <td>
-                        <input
-                          onChange={(e) => this.handleChange(e, index)}
-                          type="number"
-                          name="shares_owned"
-                          value={shares_owned}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          onChange={(e) => this.handleChange(e, index)}
-                          type="number"
-                          name="cost_per_share"
-                          value={cost_per_share}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          onChange={(e) => this.handleChange(e, index)}
-                          type="number"
-                          name="market_price"
-                          value={market_price}
-                        />
-                      </td>
-                      <td>{market_value}</td>
-                      <td>{unrealized_gain_loss}</td>
-                      <td>
-                        <button
-                          className="btn btn-light btn-sm"
-                          onClick={() => this.removeStock(index)}
-                        >
-                          remove
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
+              <tbody>{this.updateTable()}</tbody>
             </table>
             <div className="col-12 col-md-6">
               <h4 className="mb-3">
@@ -131,6 +163,42 @@ class Portfolio extends React.Component {
                 Portfolio gain/loss: $ {portfolio_gain_loss}
               </h4>
             </div>
+            <form className="col-12 mt-2 mb-4" onSubmit={this.addStock}>
+              <input
+                type="text"
+                className="mx-2"
+                name="name"
+                placeholder="name"
+                onChange={this.handleFormChange}
+                value={form.name}
+                required
+              />
+              <input
+                type="number"
+                className="mx-2"
+                name="shares_owned"
+                placeholder="Shares"
+                value={form.shares_owned}
+                onChange={this.handleFormChange}
+              />
+              <input
+                type="number"
+                className="mx-2"
+                name="cost_per_share"
+                placeholder="Cost"
+                value={form.cost_per_share}
+                onChange={this.handleFormChange}
+              />
+              <input
+                type="number"
+                className="mx-2"
+                name="market_price"
+                placeholder="Price"
+                value={form.market_price}
+                onChange={this.handleFormChange}
+              />
+              <button className="btn btn_primary btn-sm">add</button>
+            </form>
           </div>
         </div>
       </div>
